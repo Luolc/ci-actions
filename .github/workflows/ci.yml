@@ -1,0 +1,83 @@
+# Pull request and main gate, built with this repo's own actions: `changes`
+# decides what to run, `lint` always runs, `test` runs when the actions or
+# their tests change. `check` is the required status check.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Every main commit needs a result of its own, so runs on main are never
+  # cancelled; a newer push to a PR branch cancels the older run.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read # find the last green run of this workflow on main
+    outputs:
+      groups: ${{ steps.changes.outputs.groups }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: changes
+        uses: ./changes
+        with:
+          groups: |
+            test: changes/** all-green/** tests/**
+            docs: *.md LICENSE
+          run-all-on: .github/** .pre-commit-config.yaml
+
+  lint:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action lists the commits of the PR
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      # Scans the commits of this PR or push; gitleaks.yml scans the whole
+      # history weekly.
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_VERSION: 8.30.1
+          # Commenting on the PR would need pull-requests: write; the job
+          # log and summary show the finding.
+          GITLEAKS_ENABLE_COMMENTS: false
+      # The gitleaks hook scans staged changes, which CI does not have; the
+      # step above does that work.
+      - run: pipx run --spec pre-commit==4.6.2 pre-commit run --all-files --show-diff-on-failure
+        env:
+          SKIP: gitleaks
+
+  test:
+    needs: changes
+    if: fromJSON(needs.changes.outputs.groups).test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: tests/run.sh
+
+  check:
+    needs: [changes, lint, test]
+    # Without always(), a failed job would skip this one, and a skipped
+    # required check counts as passed.
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./all-green
+        with:
+          needs: ${{ toJSON(needs) }}

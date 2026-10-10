@@ -1,0 +1,30 @@
+name: changes
+description: Decide which path groups a change touches, so that later jobs can run or skip.
+inputs:
+  groups:
+    description: >-
+      One group per line, `name: glob glob ...`. Name each group after the job
+      that depends on it. A changed file in no group runs every group.
+    required: true
+  run-all-on:
+    description: Globs (whitespace-separated) that run every group when any file matching them changes.
+    required: false
+    default: ""
+  token:
+    description: 'Token used to find the last green run of this workflow; needs `actions: read`.'
+    required: false
+    default: ${{ github.token }}
+outputs:
+  groups:
+    description: 'JSON object from group name to true (run) or false (skip), e.g. {"test":true,"docs":false}.'
+    value: ${{ steps.changes.outputs.groups }}
+runs:
+  using: composite
+  steps:
+    - id: changes
+      shell: bash
+      env:
+        CHANGES_GROUPS: ${{ inputs.groups }}
+        CHANGES_RUN_ALL_ON: ${{ inputs.run-all-on }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: bash "$GITHUB_ACTION_PATH/changes.sh"

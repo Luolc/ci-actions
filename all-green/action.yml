@@ -1,0 +1,13 @@
+name: all-green
+description: Fail unless every job passed, or was skipped because `changes` said its group need not run.
+inputs:
+  needs:
+    description: The calling job's `toJSON(needs)`. One of the jobs must be `changes`, with the output `groups`.
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        ALL_GREEN_NEEDS: ${{ inputs.needs }}
+      run: bash "$GITHUB_ACTION_PATH/all-green.sh"
