@@ -1,0 +1,15 @@
+# Commit hooks: secret scan of the staged changes, then shellcheck.
+repos:
+  # First, so that a secret is stopped before any other hook runs. The
+  # upstream entry already has --staged and --redact; --redact is repeated so
+  # that a rev bump cannot silently drop it. On a rev bump, check that the
+  # upstream entry still ends in --staged.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        args: ["--redact", "--no-banner", "."]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
