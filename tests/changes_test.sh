@@ -192,6 +192,16 @@ test_a_file_in_run_all_on_runs_all() {
   assert_contains "$out" "docs/shared/a.md is in run-all-on"
 }
 
+test_a_non_ascii_path_matches_its_group() {
+  setup_repo
+  STUB_GH_SHA=$(git rev-parse HEAD)
+  export STUB_GH_SHA
+  commit docs/é.md
+  push_event
+  changes
+  assert_eq "$groups" '{"src":false,"docs":true,"other":false}' "groups"
+}
+
 test_star_matches_within_one_directory_only() {
   setup_repo
   STUB_GH_SHA=$(git rev-parse HEAD)

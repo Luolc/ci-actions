@@ -41,6 +41,8 @@ required one, breaks every caller on its next SHA bump.
 `main`. `changes` decides whether `test` runs; `lint` always runs the
 gitleaks action on the commits of the PR or push, then the hooks on all files
 (gitleaks skipped). `check` runs `./all-green` from the same checkout, so a
-pull request that changes `all-green/` is judged by its own version: review
-those changes with that in mind. External actions are pinned by full SHA with
-the version in a trailing comment.
+pull request that changes `all-green/` is judged by its own version. A step
+before it fails `check` on any failed or cancelled job regardless; a job
+skipped although its group had to run is caught only by `./all-green`, so
+review changes to `all-green/` with that in mind. External actions are
+pinned by full SHA with the version in a trailing comment.

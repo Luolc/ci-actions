@@ -10,9 +10,10 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
-  # Every main commit needs a result of its own, so runs on main are never
-  # cancelled; a newer push to a PR branch cancels the older run.
+  # Every main commit needs a result of its own, so each one gets its own
+  # group: a shared group would cancel a pending run when a newer one
+  # arrives. On a PR branch, a newer push cancels the older run.
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
@@ -77,6 +78,11 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     steps:
+      # ./all-green below is this PR's own version, so a PR that breaks it
+      # could pass itself. This guard does not depend on it; a job skipped
+      # although its group had to run is still left to ./all-green.
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./all-green
         with:

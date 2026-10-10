@@ -21,20 +21,24 @@ if ! groups=$(jq -ce '.changes.outputs.groups | fromjson | objects' <<<"$needs" 
 fi
 line changes "$changes" ok
 
+# One row per job: name, result, and its group as `true`, `false` or `none`
+# (no boolean group of that name). An assignment, so a jq error stops here.
+rows=$(jq -r --argjson groups "$groups" '
+  to_entries[] | select(.key != "changes")
+  | [.key, .value.result, ($groups[.key] | if type == "boolean" then tostring else "none" end)]
+  | @tsv' <<<"$needs")
+
 status=0
-while IFS=$'\t' read -r job result; do
-  case $result in
-    success) verdict=ok ;;
-    skipped)
-      case $(jq -r --arg job "$job" '.[$job]' <<<"$groups") in
-        false) verdict="ok: group $job need not run" ;;
-        true) verdict="FAIL: skipped, but group $job had to run" ;;
-        *) verdict="FAIL: skipped, and no group is named $job" ;;
-      esac
-      ;;
+while IFS=$'\t' read -r job result group; do
+  [[ -n $job ]] || continue
+  case $result:$group in
+    success:*) verdict=ok ;;
+    skipped:false) verdict="ok: group $job need not run" ;;
+    skipped:true) verdict="FAIL: skipped, but group $job had to run" ;;
+    skipped:*) verdict="FAIL: skipped, and no group is named $job" ;;
     *) verdict=FAIL ;;
   esac
   [[ $verdict == ok* ]] || status=1
   line "$job" "$result" "$verdict"
-done < <(jq -r 'to_entries[] | select(.key != "changes") | [.key, .value.result] | @tsv' <<<"$needs")
+done <<<"$rows"
 exit "$status"

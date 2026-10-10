@@ -126,7 +126,9 @@ all=false
 base=$(find_base)
 if [[ -z $base ]]; then
   all=true
-elif ! files=$(git diff --no-renames --name-only "$base" HEAD); then
+# quotePath=false: otherwise a non-ASCII path comes out quoted and escaped,
+# matches no group, and runs every group.
+elif ! files=$(git -c core.quotePath=false diff --no-renames --name-only "$base" HEAD); then
   log "git diff against $base failed"
   all=true
 else

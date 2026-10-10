@@ -43,8 +43,10 @@ on:
     - cron: "17 3 * * 1" # weekly run of everything
 
 concurrency:
-  group: ci-${{ github.ref }}
-  # Every main commit needs its own result; only PR runs are cancelled.
+  # Every main commit needs its own result, so each gets its own group (in a
+  # shared group, a newer run cancels a pending one). Only PR runs are
+  # cancelled.
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
