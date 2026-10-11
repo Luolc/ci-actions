@@ -1,0 +1,24 @@
+name: release-ci-green
+description: Fail unless the push run of ci.yml on main for a commit succeeded on its first attempt; wait while it runs.
+inputs:
+  sha:
+    description: Full 40-character SHA of the commit to check. Default the commit that triggered the workflow.
+    required: false
+    default: ${{ github.sha }}
+  repo:
+    description: Repository of the commit, `owner/name`. Default the calling repository.
+    required: false
+    default: ${{ github.repository }}
+  token:
+    description: 'Token used to read the runs of ci.yml; needs `actions: read` on `repo`.'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        RELEASE_CI_GREEN_SHA: ${{ inputs.sha }}
+        RELEASE_CI_GREEN_REPO: ${{ inputs.repo }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: bash "$GITHUB_ACTION_PATH/release-ci-green.sh"

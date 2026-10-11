@@ -35,7 +35,7 @@ jobs:
         uses: ./changes
         with:
           groups: |
-            test: changes/** all-green/** tests/**
+            test: changes/** all-green/** release-ci-green/** tests/**
             docs: *.md LICENSE
           run-all-on: .github/** .pre-commit-config.yaml
 
