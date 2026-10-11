@@ -273,23 +273,22 @@ release-ci-green: run 38093841693 of <sha>: conclusion success, run_attempt 1
 
 ### Run it locally
 
-To check a commit by hand before pushing a tag, run the script from a clone
-of this repository. It needs `gh` (logged in, or `GH_TOKEN` set) and `jq`.
-The inputs are environment variables; the exit status is the action's. From
-the checkout of the repository to release, on the commit to tag:
+To check a commit by hand before pushing a tag, run the script at the SHA
+your release workflow pins, from a clone of this repository. It needs `gh`
+(logged in, or `GH_TOKEN` set) and `jq`. The inputs are environment
+variables; the exit status is the action's. From the checkout of the
+repository to release, on the commit to tag:
 
 ```sh
-RELEASE_CI_GREEN_SHA=$(git rev-parse HEAD) RELEASE_CI_GREEN_REPO=<owner>/<name> \
+git -C <path to ci-actions> fetch origin &&
+  git -C <path to ci-actions> checkout --detach <pinned sha> &&
+  RELEASE_CI_GREEN_SHA=$(git rev-parse HEAD) RELEASE_CI_GREEN_REPO=<owner>/<name> \
   bash <path to ci-actions>/release-ci-green/release-ci-green.sh
 ```
 
-To run the version that a workflow pins, without checking it out:
-
-```sh
-git -C <path to ci-actions> fetch origin
-RELEASE_CI_GREEN_SHA=$(git rev-parse HEAD) RELEASE_CI_GREEN_REPO=<owner>/<name> \
-  bash <(git -C <path to ci-actions> show <pinned sha>:release-ci-green/release-ci-green.sh)
-```
+Keep the `&&`: when the clone does not have the pinned SHA, the checkout
+fails and the command exits non-zero before it runs any version of the
+script. The clone stays on the pinned commit afterwards.
 
 Done when it exits 0 after printing `conclusion success, run_attempt 1`.
 
