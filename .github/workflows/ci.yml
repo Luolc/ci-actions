@@ -1,6 +1,6 @@
 # Pull request and main gate, built with this repo's own actions: `changes`
 # decides what to run, `lint` always runs, `test` runs when the actions or
-# their tests change. `check` is the required status check.
+# their tests change. `check` sums them up.
 name: CI
 
 on:

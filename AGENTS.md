@@ -40,8 +40,10 @@ required one, breaks every caller on its next SHA bump.
 
 ## CI
 
-`check` in `.github/workflows/ci.yml` is the required status check of
-`main`. `changes` decides whether `test` runs; `lint` always runs the
+`check` in `.github/workflows/ci.yml` runs on every pull request, but it is
+not a required status check of `main`: a merge does not wait for it. A pull
+request whose CI is already red at the approved head is not merged.
+`changes` decides whether `test` runs; `lint` always runs the
 gitleaks action on the commits of the PR or push, then the hooks on all files
 (gitleaks skipped). `check` runs `./all-green` from the same checkout, so a
 pull request that changes `all-green/` is judged by its own version. A step
