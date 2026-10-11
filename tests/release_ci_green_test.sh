@@ -44,11 +44,12 @@ runs() {
 }
 
 # Runs the script; sets $status, $out (the log) and $calls (gh calls made).
+# The outer timeout stops a script whose own deadline is broken.
 release_ci_green() {
   status=0
   out=$(RELEASE_CI_GREEN_SHA=${SHA_INPUT-$SHA} RELEASE_CI_GREEN_REPO=${REPO_INPUT-owner/repo} \
     RELEASE_CI_GREEN_INTERVAL=0 RELEASE_CI_GREEN_TIMEOUT=${TIMEOUT:-5} \
-    bash "$ROOT/release-ci-green/release-ci-green.sh" 2>&1) || status=$?
+    timeout 20 bash "$ROOT/release-ci-green/release-ci-green.sh" 2>&1) || status=$?
   calls=$(wc -l <"$TMP/gh.log")
 }
 
@@ -148,7 +149,8 @@ test_unreadable_answers_exit_4() {
   done
 }
 
-# An empty or short head_sha would make the API return other commits' runs.
+# An empty head_sha would make the API return other commits' runs; a short
+# one would find no run and fail for the wrong reason.
 test_sha_must_be_full_and_lowercase() {
   local sha
   answers "$(runs "$(run 7 completed success 1)")"

@@ -19,8 +19,9 @@ repo=${RELEASE_CI_GREEN_REPO:-}
 interval=${RELEASE_CI_GREEN_INTERVAL:-30}
 deadline=$(($(date +%s) + ${RELEASE_CI_GREEN_TIMEOUT:-1800}))
 
-# The API ignores an empty or malformed head_sha filter and returns the runs
-# of other commits, so only a full SHA is accepted.
+# The API ignores an empty head_sha filter and returns the runs of other
+# commits, and finds no run for a short SHA, so only a full SHA as git prints
+# it is accepted.
 if [[ ! $sha =~ ^[0-9a-f]{40}$ ]]; then
   log "sha must be a full 40-character lowercase commit SHA, got [$sha]"
   exit 2

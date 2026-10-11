@@ -253,8 +253,8 @@ It reads the runs of `.github/workflows/ci.yml` in `repo` that a push of
   whose first attempt passed, after reading why this one failed.
 
 The workflow file name `ci.yml` and the branch `main` are fixed. `sha` must
-be a full SHA because the API ignores an empty or malformed `head_sha` and
-returns the runs of other commits.
+be a full SHA as git prints it: the API ignores an empty `head_sha` and
+returns the runs of other commits, and finds no run for a short one.
 
 Exit status, also of the script run locally:
 
