@@ -5,25 +5,28 @@ messages, pull requests.
 
 ## What this is
 
-Two composite actions that other repositories pin by commit SHA: `changes`
-(which path groups a change touches) and `all-green` (the required `check`
-job). README.md is the interface for those repositories: inputs, outputs and
-the rules both actions follow. A change of behaviour updates README.md in the
-same pull request.
+Three composite actions that other repositories pin by commit SHA: `changes`
+(which path groups a change touches), `all-green` (the required `check` job)
+and `release-ci-green` (for release workflows: whether a commit's CI on
+`main` passed at its first attempt). README.md is the interface for those
+repositories: inputs, outputs and the rules each action follows. A change
+of behaviour updates README.md in the same pull request.
 
-Repositories pin a merge commit on `main`; there are no tags or releases.
+Repositories pin a commit on `main`; there are no tags or releases.
 Keep the interface backward compatible: a renamed input or output, or a new
 required one, breaks every caller on its next SHA bump.
 
 ## Layout
 
-- `changes/`, `all-green/`: one action each, `action.yml` plus the bash
-  script it runs. The actions use only bash, `git`, `gh` and `jq` from the
-  runner image, and never `uses:` another action.
+- `changes/`, `all-green/`, `release-ci-green/`: one action each,
+  `action.yml` plus the bash script it runs. The actions use only bash,
+  `git`, `gh` and `jq` from the runner image, and never `uses:` another
+  action.
 - `tests/`: `run.sh` runs every `test_*` function in `tests/*_test.sh`, each
   in its own bash process; `lib.sh` holds the shared helpers. `gh` is
   replaced by a stub, so the tests never call GitHub.
-- `.github/workflows/ci.yml`: CI, built with the two actions themselves.
+- `.github/workflows/ci.yml`: CI, built with `changes` and `all-green`
+  themselves.
   `gitleaks.yml`: weekly secret scan of the whole history.
 
 ## Checks
