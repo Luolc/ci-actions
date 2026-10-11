@@ -1,14 +1,17 @@
 # ci-actions
 
-Two composite actions for a CI that runs only what a change touches, while a
-single required check still guards the branch:
+Composite actions for a CI that runs only what a change touches, while a
+single required check still guards the branch, and for releasing only
+commits whose CI passed:
 
 - [`changes`](changes/action.yml) decides which path groups a change touches.
 - [`all-green`](all-green/action.yml) is the last job: it passes only when
   every other job passed, or was skipped because `changes` said its group need
   not run.
+- [`release-ci-green`](release-ci-green/action.yml) passes only when the push
+  run of `ci.yml` on `main` for a commit succeeded on its first attempt.
 
-Both are plain bash (`git`, `gh` and `jq` from the runner image) and use no
+All are plain bash (`git`, `gh` and `jq` from the runner image) and use no
 other action.
 
 ## The shape of a workflow
@@ -212,25 +215,103 @@ test                     skipped    ok: group test need not run
 e2e                      skipped    FAIL: skipped, but group e2e had to run
 ```
 
+## `release-ci-green`
+
+A release job runs it before it tags or publishes anything:
+
+```yaml
+jobs:
+  ci-green:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read # read the runs of ci.yml
+    steps:
+      # Checks github.sha: the tagged commit on a tag push.
+      - uses: Luolc/ci-actions/release-ci-green@<sha> # main, YYYY-MM-DD
+```
+
+### Inputs
+
+| Input | Required | Description |
+| -- | -- | -- |
+| `sha` | no | The commit to check, as a full 40-character lowercase SHA. Default `github.sha`. |
+| `repo` | no | The repository of the commit, `owner/name`. Default `github.repository`. |
+| `token` | no | Token for reading the runs of `ci.yml` in `repo`. Default `github.token`; it needs `actions: read` there, so set that permission on the calling job. For another private repository, pass a token that can read its Actions. |
+
+### Rules
+
+It reads the runs of `.github/workflows/ci.yml` in `repo` that a push of
+`sha` to `main` started, and takes the newest by `created_at`. Then:
+
+- while that run has not completed, it polls every 30 seconds, for at most
+  30 minutes;
+- it passes when the run completed with `success` at `run_attempt` 1;
+- it fails when there is no such run, when the run disappears while it
+  waits, when the run does not complete in time, and when it ended with any
+  other conclusion or at a later attempt. A rerun that turned green does not
+  count: it can turn a flaky red into green. Release a later commit on `main`
+  whose first attempt passed, after reading why this one failed.
+
+The workflow file name `ci.yml` and the branch `main` are fixed. `sha` must
+be a full SHA because the API ignores an empty or malformed `head_sha` and
+returns the runs of other commits.
+
+Exit status, also of the script run locally:
+
+| Exit | Meaning |
+| -- | -- |
+| 0 | the run succeeded at `run_attempt` 1 |
+| 1 | no such run, it disappeared or did not complete in time, or it did not succeed at `run_attempt` 1 |
+| 2 | a bad input: `sha` is not a full SHA, or `repo` is empty |
+| 4 | the runs cannot be read: the API call failed, or its answer has an unexpected shape |
+
+The log ends in a line like
+
+```
+release-ci-green: run 38093841693 of <sha>: conclusion success, run_attempt 1
+```
+
+### Run it locally
+
+To check a commit by hand before pushing a tag, run the script from a clone
+of this repository. It needs `gh` (logged in, or `GH_TOKEN` set) and `jq`.
+The inputs are environment variables; the exit status is the action's. From
+the checkout of the repository to release, on the commit to tag:
+
+```sh
+RELEASE_CI_GREEN_SHA=$(git rev-parse HEAD) RELEASE_CI_GREEN_REPO=<owner>/<name> \
+  bash <path to ci-actions>/release-ci-green/release-ci-green.sh
+```
+
+To run the version that a workflow pins, without checking it out:
+
+```sh
+git -C <path to ci-actions> fetch origin
+RELEASE_CI_GREEN_SHA=$(git rev-parse HEAD) RELEASE_CI_GREEN_REPO=<owner>/<name> \
+  bash <(git -C <path to ci-actions> show <pinned sha>:release-ci-green/release-ci-green.sh)
+```
+
+Done when it exits 0 after printing `conclusion success, run_attempt 1`.
+
 ## Pinning
 
-Reference both actions by a full commit SHA of this repository, never by a
+Reference the actions by a full commit SHA of this repository, never by a
 branch, and write in a trailing comment where it comes from:
 
 ```yaml
 uses: Luolc/ci-actions/changes@<40-character sha> # main, YYYY-MM-DD
 ```
 
-A SHA cannot be moved the way a branch or tag can. Take it from a merge
-commit on `main` whose CI passed. GitHub also serves commits of forks under
+A SHA cannot be moved the way a branch or tag can. Take it from a commit on
+`main` whose CI passed. GitHub also serves commits of forks under
 this repository's name, so check that the SHA is on `main`:
 
 ```sh
 gh api repos/Luolc/ci-actions/compare/<sha>...main --jq .status # identical or ahead
 ```
 
-Use the same SHA for `changes` and `all-green`. To upgrade, change both SHAs
-in one pull request.
+Pin every action of this repository to the same SHA, and upgrade them all in
+one pull request.
 
 ## Development
 
