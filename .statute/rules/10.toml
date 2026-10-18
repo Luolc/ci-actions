@@ -1,0 +1,31 @@
+id = 10
+slug = "actions-by-sha"
+revision = 1
+kind = "rule"
+status = "trial"
+lang = "en"
+parent = "R276"
+default = "on"
+authority = ["secure-authoring"]
+constitution = ">=1"
+level = "project"
+check = "none"
+uses = ["instructions", "review"]
+
+[title]
+en = "Pin every external action by full commit SHA, with its version in a comment"
+
+[text.statement]
+en = "In `.github/workflows/`, pin every action from outside this repository to its full commit SHA, with the version that SHA is in a trailing comment, never to a tag or a branch."
+
+[text.reason]
+en = '''
+A tag or a branch can be moved to other code, which would then run in CI with this repository's token; the comment says which version a SHA bump moves from and to.
+'''
+
+[text.verification]
+en = '''
+The actions of this repository itself, used as `./changes` and `./all-green`, are not pinned.
+
+Violated when a workflow uses an external action by a tag, a branch or a shortened SHA, or by a full SHA with no version in a trailing comment.
+'''

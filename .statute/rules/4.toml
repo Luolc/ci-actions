@@ -1,0 +1,29 @@
+id = 4
+slug = "actions-plain-bash"
+revision = 1
+kind = "rule"
+status = "trial"
+lang = "en"
+parent = "R83"
+default = "on"
+authority = ["simplicity"]
+constitution = ">=1"
+level = "project"
+check = "none"
+uses = ["instructions", "review"]
+
+[title]
+en = "Build each action from bash, git, gh and jq of the runner image, with no other action"
+
+[text.statement]
+en = "Let `changes`, `all-green` and `release-ci-green` run only bash, `git`, `gh` and `jq` from the runner image, and never `uses:` another action."
+
+[text.reason]
+en = '''
+Each action is a directory of its own, `action.yml` plus the bash script it runs. With nothing beyond what the runner image has, a caller that pins one SHA of this repository pins all the code its actions run.
+'''
+
+[text.verification]
+en = '''
+Violated when an action's `action.yml` has a `uses:` step, or when an action installs or downloads a tool, or runs one that the runner image does not have.
+'''
