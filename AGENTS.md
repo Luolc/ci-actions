@@ -333,6 +333,7 @@ A lower-ranking provision or a principal may depart from a higher-ranking provis
 - R222 Keep work not yet pushed only on a branch other than the main branch.
 - R250 Put into a repository's commit hooks only checks that finish in seconds, such as formatting, lint, a secret scan and validating or building the repository's own sources, aiming at no more than 5 seconds for all of them; never run tests in the hooks, whether unit, integration or end-to-end, nor checks that need a heavy toolchain or outside state, and leave those to the checks before a push and to CI.
 - R256 Once you have rewritten the pushed history of a branch that others work on, tell each of them, before your task ends, to clone again or to reset to the new history before they go on.
+- L11 In each clone of this repository, run `uvx pre-commit install` once before the first commit.
 
 ### Code
 

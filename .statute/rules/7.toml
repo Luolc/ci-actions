@@ -1,6 +1,6 @@
 id = 7
 slug = "touched-checks"
-revision = 1
+revision = 2
 kind = "rule"
 status = "trial"
 lang = "en"
@@ -25,7 +25,7 @@ en = '''
 
 [text.verification]
 en = '''
-`uvx pre-commit install`, once after cloning, installs the hooks. They run gitleaks on the staged changes, then shellcheck, then `statute compile --check`. In CI, `lint` first runs the gitleaks action on the commits of the pull request or push, then the hooks on all files with gitleaks skipped. A new behavior gets a test that fails without it.
+The hooks (installed as {@rule:L11} says) run gitleaks on the staged changes, then shellcheck, then `statute compile --check`. In CI, `lint` first runs the gitleaks action on the commits of the pull request or push, then the hooks on all files with gitleaks skipped. A new behavior gets a test that fails without it.
 
 Violated when a change is pushed without a check this list gives for the paths it changes having passed on the pushed version.
 '''
