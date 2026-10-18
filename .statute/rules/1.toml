@@ -1,0 +1,29 @@
+id = 1
+slug = "readme-with-behavior"
+revision = 1
+kind = "rule"
+status = "trial"
+lang = "en"
+parent = "R16"
+default = "on"
+authority = ["accountable-agent.whole-task"]
+constitution = ">=1"
+level = "project"
+check = "none"
+uses = ["instructions", "review"]
+
+[title]
+en = "Update README.md in the same pull request as a change of an action's behavior"
+
+[text.statement]
+en = "When a pull request changes the behavior of `changes`, `all-green` or `release-ci-green` (its inputs, its outputs or the rules it follows), update their description in `README.md` in the same pull request."
+
+[text.reason]
+en = '''
+The repositories that use these actions read `README.md` as their interface: its inputs, outputs and the rules each action follows. A behavior that changes without it leaves them pinning a SHA whose documentation is wrong.
+'''
+
+[text.verification]
+en = '''
+Violated when a pull request changes an action's inputs, outputs or behavior and `README.md` at its head still describes the old ones.
+'''

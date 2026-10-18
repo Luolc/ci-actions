@@ -1,0 +1,31 @@
+# Written by `statute init`; `statute add` and `statute remove` change the rules.
+constitution = { source = "R", edition = "2026-10" }
+public = true
+
+domains = [
+  # Agents write and change this repository's own rules in .statute/rules/.
+  "R96",
+]
+
+rules = [
+  # main is protected and takes changes only through reviewed pull requests.
+  "R57",
+  # The repository is public: a reviewer reads what is pushed before the push.
+  "R52",
+  # On a pull request, the run of check is what counts, not a full local run.
+  "R72",
+  # check is not a required status check: a merge does not wait for it (L8), but a
+  # pull request whose check already failed at the approved head is not merged.
+  "R211",
+  # CI runners are pinned to a fixed Ubuntu release.
+  "R212",
+]
+
+[language]
+code-comments = "en"
+docs = "en"
+commits = "en"
+pull-requests = "en"
+# What agents write to a person here is in English, as the repository is; a person who
+# reads another language sets it in their own configuration.
+communication = "en"

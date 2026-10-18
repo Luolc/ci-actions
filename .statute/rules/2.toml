@@ -1,0 +1,29 @@
+id = 2
+slug = "no-tags-or-releases"
+revision = 1
+kind = "rule"
+status = "trial"
+lang = "en"
+parent = "R276"
+default = "on"
+authority = ["division-of-instructions.project-instructions"]
+constitution = ">=1"
+level = "project"
+check = "none"
+uses = ["instructions", "review"]
+
+[title]
+en = "Make no tag or release of this repository"
+
+[text.statement]
+en = "Push no tag to `Luolc/ci-actions` and create no GitHub Release there: the repositories that use its actions pin a commit on `main` by its full SHA."
+
+[text.reason]
+en = '''
+A caller takes a commit on `main` whose CI passed, as `README.md` says under Pinning, and moves to another by a SHA bump. A tag would offer a second, movable way to pin, which `README.md` tells callers not to use.
+'''
+
+[text.verification]
+en = '''
+Violated when a tag is pushed to `Luolc/ci-actions` or a GitHub Release is created there.
+'''

@@ -1,0 +1,31 @@
+id = 3
+slug = "backward-compatible-interface"
+revision = 1
+kind = "rule"
+status = "trial"
+lang = "en"
+parent = "R83"
+default = "on"
+authority = ["accountable-agent.whole-task"]
+constitution = ">=1"
+level = "project"
+check = "none"
+uses = ["instructions", "review"]
+
+[title]
+en = "Keep the interface of each action backward compatible"
+
+[text.statement]
+en = "In `changes/action.yml`, `all-green/action.yml` and `release-ci-green/action.yml`, never rename an input or an output and never add a required input."
+
+[text.reason]
+en = '''
+Every repository that uses these actions pins a commit on `main`, with no tags or versions to say that an interface changed. A renamed input or output, or a new required one, breaks each caller on its next SHA bump.
+'''
+
+[text.verification]
+en = '''
+A new input with a default, or a new output, keeps the interface compatible.
+
+Violated when a pull request renames an input or an output of an action, or adds an input that is required or has no default.
+'''
